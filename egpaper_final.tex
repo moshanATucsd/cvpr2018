@@ -84,7 +84,11 @@ Once we have the correspondences across cameras and views, We get the fit a moti
  E_{st} = \sum_{t=1}^T w_r E_r + w_j E_j + w_l E_l + w_m E_m 
 \end{equation}
 
-where $w_m$ 
+where $w$ represents the weights of each term in the bundle adjustment. $E_m$ is defined as the motion prior over the trajectory of the points.
+
+\begin{equation}
+E_m = \sum_{p =1 }^P \sum_{i = 1}^{T^n -1} ||\frac{X^p(t^{i+1}) - X^p(t^{i})}{t^{i+1} - t^{i}}||^2 (t^{i+1} - t^{i})
+\end{equation}
 \begin{figure}
   \centering
     \includegraphics[width=0.4\textwidth]{images/corr}
