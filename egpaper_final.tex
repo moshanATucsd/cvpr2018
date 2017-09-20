@@ -34,15 +34,20 @@
 %%%%%%%%% ABSTRACT
 \begin{abstract}
 Multi camera based understanding of dynamic scenes from unsynchronized images is a challening problem in reconstruction. We propose a solution to the problem of 3D reconstruction of multiple moving rigid objects from unsynchronized multiple cameras. Most of the reconstruction piplines leverage reconstruction using reprojection error of features, we propose a novel semantic features pipeline and object based feature tracking for reconstruction of dynamic objects. We leverage multiple rigid object constraints in a bundle adjustment framework to improve the reconstuction. \end{abstract}
+
 \section{INTRODUCTION}
 We propose dynamic reconstruction of rigid objects from multiple unsynchronized and in the wild captured cameras. The main contributions of the algorithm are:
 \begin{enumerate}
-\item Novel instance keypoint detection pipeline for reconstruction of moving objects.
-\item Constraint Bundle adjustment for reconstruction of dynamic rigid moving objects from viwed from multiple cameras. 
-\item End-to-End dense recosntruction of rigid objects from multiple unsynchronized cameras.
+%\item Novel instance keypoint detection pipeline for reconstruction of moving objects.
+\item  Time synchronization of multiple videos by optimizing for motion of moving objects. 
+\item Constraint Bundle adjustment for reconstruction of dynamic rigid moving objects viewed from multiple cameras. 
+\item Using contextual keypoint information for improving dense reconstruction of dynamic objects.
 \end{enumerate}
+
+\section{RELATED WORK}
+
 \section{METHOD}
-We Follow the basic pipeline of reconstcruion i.e. feature detection and tracking, correspodence of the keypoint across views and then bundle adjustment for accurate reconstruction of the 3d points. In each of the segments of the pipeline we incorporate geometric and semantic information of the objects for better reconstruction. We propose instance keypoint segmentation for better feature detection of important points on the rigid object. 
+We fllow the template version of 3D reconstruction from multiple cameras i.e. feature detection and tracking, correspodence of the keypoint across views and then bundle adjustment for accurate reconstruction of the 3d points. In each of the segments of the pipeline we incorporate geometric and semantic information of the objects for better reconstruction. We propose instance keypoint segmentation for better feature detection of important points on the rigid object. 
 We first formulate the problem statement for the problem. Lets assume $N$ video cameras observing $P$ 3d points over time $X^p(t)$ and their 2D projection $x^p_n(f)$ on camera $p$ and frame $f$ is given as:
 
 \begin{align*}
@@ -51,14 +56,12 @@ We first formulate the problem statement for the problem. Lets assume $N$ video 
 
 where $K_n(f)$ is the intrisic camera matrix, $R_n(f)$ and $T_n(f)$ are the relative camera rotation and translation, respectively. We denote this transformations $x_c^n(f) = P_n(f,X^n(t))$
 %-------------------------------------------------------------------------
-\subsection{Instance Aware Keypoint detection}
-Given a images with multiple moving objects. The amount of objects which can move can be sorted into a small set of categories like cars and humans. We propose a instance keypoint detection on these categories for improving the reconstruction of these objects. We leverage deep learning framwork for fast and accurate detection of semantic features in images. We pass the input image through a detection pipeline and each detected bounding box is passed through a object specific keypoint detection pipeline for computation of semantic features in an image.  
 
-\subsection{Object aware keypoint tracking}
-Tracking of keypoints has generally been considered as a search problem over the image space for features of similar shape in adjustcent images. Semantic aware tracking correspondences to tracking of the important parts using the knowledge of the object i.e. the keypoints on the wheels are tracked by finding the correspondences of cars overtime. This gives a better tracks of the keypoints and longer correpondeces compared to the feature based tracking methods. 
+\subsection{Time synchronization from multiple videos}
+For accurate reconstruction of dynamic scenes we need time synchronization of all the videos capturing the scene. we propose a multi camera video synchronization method for reconstructing from muliple videos. The underlying assumtion in our formulation is that all the cameras observe the single rigid moving objectfor example a car moving on the road. 
 
 \subsection{Correspondence across views}
-We currently have tracks of objects and thier respective keypoints in each individual video for all videos of the scene. For accurate reconstruction of objects from multiple views we need to find corrospondences across views. We propose a object specific bundle adjustment for finding correspondes across views. Lets assume we have $h$ object proposals in $N$ videos at time $t$. The problem of correspondence is finding $g$, where $g \subset h$ object bounding boxes which belong to the same object. Since there is a spatial constraint on the bounding boxes over multiple views, Fig \ref{fig:corr} shows the bundle adjustment we use to find correspondes across views. We propose a ransac based methodology for finding correspondenses across views and minimize the following reprojection error:
+We currently have tracks of objects and thier respective keypoints in each individual video for all videos of the scene. For accurate reconstruction of objects from multiple views we need to find corrospondences across views. We propose a object specific bundle adjustment for finding correspondes across views. Lets assume we have $h$ object proposals in $N$ videos at any time instant $t$. The problem of correspondence is finding $g$, where $g \subset h$ object bounding boxes which belong to the same object. Since there is a spatial constraint on the bounding boxes over multiple views, Fig \ref{fig:corr} shows the bundle adjustment we use to find correspondes across views. We propose a ransac based methodology for finding correspondenses across views and minimize the following reprojection error:
 
 \begin{equation}
   	E_r =\sum_{n=1}^{N} \sum_{p=1}^P \sum_{f=1}^{F_n} V_n^p(f) ||P_n(f,X^p(t)) - x_n^p(f)||^2
@@ -96,5 +99,12 @@ E_m = \sum_{p =1 }^P \sum_{i = 1}^{T^n -1} ||\frac{X^p(t^{i+1}) - X^p(t^{i})}{t^
   \label{fig:corr}
 \end{figure}
 
+\section{Implementation Details}
+
+\subsection{Instance Aware Keypoint detection}
+Given a images with multiple moving objects. The amount of objects which can move can be sorted into a small set of categories like cars and humans. We propose a instance keypoint detection on these categories for improving the reconstruction of these objects. We leverage deep learning framwork for fast and accurate detection of semantic features in images. We pass the input image through a detection pipeline and each detected bounding box is passed through a object specific keypoint detection pipeline for computation of semantic features in an image.  
+
+\subsection{Object aware keypoint tracking}
+Tracking of keypoints has generally been considered as a search problem over the image space for features of similar shape in adjustcent images. Semantic aware tracking correspondences to tracking of the important parts using the knowledge of the object i.e. the keypoints on the wheels are tracked by finding the correspondences of cars overtime. This gives a better tracks of the keypoints and longer correpondeces compared to the feature based tracking methods. 
 
 \end{document}
