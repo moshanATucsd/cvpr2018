@@ -25,7 +25,7 @@
 \begin{document}
 
 %%%%%%%%% TITLE
-\title{Spatio-Temporal reconstruction of Rigid objects from multiple cameras}
+\title{Dynamic object detection and reconstruction using multi-view bootstrapping}
 
 
 \maketitle
@@ -33,19 +33,21 @@
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-Multi camera based understanding of dynamic scenes from unsynchronized images is a challening problem in reconstruction. We propose a solution to the problem of 3D reconstruction of multiple moving rigid objects from unsynchronized multiple cameras. Most of the reconstruction piplines leverage reconstruction using reprojection error of features, we propose a novel semantic features pipeline and object based feature tracking for reconstruction of dynamic objects. We leverage multiple rigid object constraints in a bundle adjustment framework to improve the reconstuction. \end{abstract}
-
+Reconstruction of dynamic scenes from multiple unsynchronized cameras in the wild is a challenging problem. Most of the research in the multi camera based reconstruction has been focused in two aspects. With multiple cameras being stationary with dynamic objects in the scene or static scene with cameras moving. We propose a algorithm to solve the problem of dynamic scene reconstruction from multiple moving cameras. We also show the advantages of our method by proposing a improvement in detection using multi-view bootstrapping. We use semantic keypoints and spatio-temporal bundle adjustment to densily reconstruct the dynamic scenes. Using the accurate reconstructions, we improve the accuracy of the keypoint detections. The novel method of using multiple camera based method for training the detections can be applied to any task in computer vision.      
+%Multi camera based understanding of dynamic scenes from unsynchronized images is a challening problem in reconstruction. We propose a solution to the problem of 3D reconstruction of multiple moving rigid objects from unsynchronized multiple cameras. Most of the reconstruction piplines leverage reconstruction using reprojection error of features, we propose a novel semantic features pipeline and object based feature tracking for reconstruction of dynamic objects. We leverage multiple rigid object constraints in a bundle adjustment framework to improve the reconstuction. 
+\end{abstract}
+%sdsd
 \section{INTRODUCTION}
-We propose dynamic reconstruction of rigid objects from multiple unsynchronized and in the wild captured cameras. The main contributions of the algorithm are:
+Reconstruction from multiple unsynchronized We propose dynamic reconstruction of rigid objects from multiple unsynchronized and in the wild captured cameras. The main contributions of the algorithm are:
 \begin{enumerate}
 %\item Novel instance keypoint detection pipeline for reconstruction of moving objects.
 \item  Time synchronization of multiple videos by optimizing for motion of moving objects. 
 \item Constraint Bundle adjustment for reconstruction of dynamic rigid moving objects viewed from multiple cameras. 
-\item Using contextual keypoint information for improving dense reconstruction of dynamic objects.
+\item Improving the detection accuracy using reconstruction of dynamic scenes in the wild.
 \end{enumerate}
 
 \section{RELATED WORK}
-
+\subsection{}
 \section{METHOD}
 We fllow the template version of 3D reconstruction from multiple cameras i.e. feature detection and tracking, correspodence of the keypoint across views and then bundle adjustment for accurate reconstruction of the 3d points. In each of the segments of the pipeline we incorporate geometric and semantic information of the objects for better reconstruction. We propose instance keypoint segmentation for better feature detection of important points on the rigid object. 
 We first formulate the problem statement for the problem. Lets assume $N$ video cameras observing $P$ 3d points over time $X^p(t)$ and their 2D projection $x^p_n(f)$ on camera $p$ and frame $f$ is given as:
