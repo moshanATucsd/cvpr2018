@@ -82,7 +82,7 @@ All the videos captured are taken from unsynchronized cameras. The first problem
 \begin{equation}
   	E_s(\delta) = min \ E_{R}(\delta,q) + E_{T}(\delta,T,q) + (q^{T} q -1)^2
 \end{equation}
-where $\delta$ is the time offset of each video with respect to the global time. where $E_R(\delta,q)$ gives the error in rotation with respect to the offset for the moving object and $E_T(\delta,T,q)$ gives the error in translation with respect to the offset. q and T are the translation and rotation in quaternion respectively.
+where $\delta$ is the time offset of each video with respect to the global time. where $E_R(\delta,q)$ gives the error in rotation with respect to the offset for the moving object and $E_T(\delta,T,q)$ gives the error in translation with respect to the offset. T and q are the translation and rotation in quaternion respectively. For further details on how to model these errors can be referred to \cite{gaspar2014synchronization}.
 
 
 \subsection{Multi-view Object Fitting}
@@ -98,12 +98,16 @@ where $E_r$ is the image reprojection error, $V_n^p(f)$ is a binary indicator of
   	E_l = \sum_{r=1}^R ||J(r) - E(J(r))||^2  
 \end{equation}
 
-where $E(J(r))$ is the mean length of joint $r$. We model the symmetry constraint in the budle adjustment for better reconstruction of rigid objects.
+where $E(J(r))$ is the mean length of joint $r$. We model the symmetry constraint in the bundle adjustment for better reconstruction of rigid objects.
 \begin{equation}
   	E_j = \sum_{q = 1}^Q ||J(q) - J(S(q))||^2
 \end{equation}
 
-where $S(q)$gives the corresponding symmetric joint of $q$ i.e. if q is the joint connecting the left wheels of a car S(q)is the joint connecting the right wheels of the car.
+where $S(q)$gives the corresponding symmetric joint of $q$ i.e. if q is the joint connecting the left wheels of a car S(q)is the joint connecting the right wheels of the car.The other most important constraint valid for all rigidly moving objects in the as rigid as possble error:
+\begin{equation}
+  	E_h = \sum_{p=1}^P ||Rp||^2
+\end{equation}
+The above error enforces that all the points have the same rotation. This is valid for all rigid objects or for points in a small clique for non rigid objects.
 
 
 \begin{algorithm}
@@ -112,22 +116,19 @@ where $S(q)$gives the corresponding symmetric joint of $q$ i.e. if q is the join
 %\Procedure{MyProcedure}{}
 \State $\textit{n} \gets \text{Total object Hypothesis }$
 \State $s \gets 0$
-\BState \emph{top}:
-\If {$i > \textit{stringlen}$} \Return false
-\EndIf
-\State $j \gets \textit{patlen}$
-\BState \emph{loop}:
-\If {$\textit{string}(i) = \textit{path}(j)$}
-\State $j \gets j-1$.
-\State $i \gets i-1$.
-\State \textbf{goto} \emph{loop}.
-\State \textbf{close};
-\EndIf
-\State $i \gets i+\max(\textit{delta}_1(\textit{string}(i)),\textit{delta}_2(j))$.
-\State \textbf{goto} \emph{top}.
+\State $l \gets \text{Minimum Number of Views of Object}$
+\BState \emph{$while(s < l$)}: \\
+\ \ \ $h=SAMPLE(n)$\\
+\ \ \ $E_o = E_r(h) + E_j(h) +E_l(h) $\\
+\ \ \ $s = REPROJECTFIT(E_o,n) $\\
+$End$
 %\EndProcedure
 \end{algorithmic}
 \end{algorithm}
+
+
+
+
 
 \subsection{Spatio-Temporal Bundle Adjustment}
 Once we have the correspondences across cameras and views, We get the fit a motion model based rigid object over time. The formulation is given by:
@@ -149,9 +150,9 @@ E_m = \sum_{p =1 }^P \sum_{i = 1}^{T^n -1} ||\frac{X^p(t^{i+1}) - X^p(t^{i})}{t^
 \end{figure}
 
 \subsection{Local features based Refinement}
-Although the reocnstructions from the constrained bundle adjustment works well. It is highly dependent on the keypoint detector. We propose to improve the reconstruction by using local features like sift around the keypoints. Since the motion of the object is stationary 
+Although the reocnstructions from the constrained bundle adjustment works well. It is highly dependent on the keypoint detector. We propose to improve the reconstruction by using local features like sift around the keypoints. Since the motion of the object is continuous, we enforce the $E_r$, $E_m$, $E_h$ on these points improve the localization of the keypoints.
 \subsection{Finetune Network}
-We 
+ 
 \section{Implementation Details}
 
 \subsection{Instance Aware Keypoint detection}
