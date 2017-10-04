@@ -1,0 +1,10 @@
+\begin{thebibliography}{1}\itemsep=-1pt
+
+\bibitem{gaspar2014synchronization}
+T.~Gaspar, P.~Oliveira, and P.~Favaro.
+\newblock Synchronization of two independently moving cameras without feature
+  correspondences.
+\newblock In {\em European Conference on Computer Vision}, pages 189--204.
+  Springer, 2014.
+
+\end{thebibliography}

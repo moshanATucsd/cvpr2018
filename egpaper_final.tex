@@ -6,10 +6,11 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{algorithm}
+%\usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
-
-
+%\usepackage[]{algorithm2e}
+\usepackage[linesnumbered,ruled]{algorithm2e}
+\SetKwRepeat{Do}{do}{while}%
 \makeatletter
 \def\BState{\State\hskip-\ALG@thistlm}
 \makeatother
@@ -66,82 +67,105 @@ The main contributions of the paper are outlined:
 
 \subsection{Geometry for learning}
 %Multiple methods have been proposed to use geometric constraints to improve the learning.
-\section{METHOD}
-We follow the template version of 3D reconstruction from multiple cameras i.e. feature detection and tracking, correspodence of the keypoint across views and then bundle adjustment for accurate reconstruction of the 3d points. In each of the segments of the pipeline we incorporate geometric and semantic information of the objects for better reconstruction. We propose instance keypoint segmentation for better feature detection of important points on the objects. 
-We first formulate the problem statement. Lets assume $N$ video cameras observing $M$ moving object with $P$ 3d points over time $X^p(t)$ and their 2D projection $x^p_n(f)$ on camera $p$ and frame $f$ is given as:
+\section{PROBLEM STATEMENT}
+Lets assume $C$ video cameras observing $M$ moving objects with $N$ 3d points on each object over time. The problem of 3D reconstruction can be posed as estimating the evolving 3D points $X_m^n(t)$, where $m$ is the 3D point belonging to a moving object. The 2D point $x_n^c(f)$  of the moving 3D points on camera $n$ can be given as:
 
 \begin{align*}
- \begin{bmatrix} x_n^p(f) \\ 1  \end{bmatrix} = K_n(f)[R_n(f) | T_n(f)] \begin{bmatrix} X_n(f) \\ 1  \end{bmatrix}
+ \begin{bmatrix} x_n^p(f) \\ 1  \end{bmatrix} = K_c(f)[R_c(f) \ \  T_c(f)] \begin{bmatrix} X_n(f) \\ 1  \end{bmatrix}
 \end{align*} 
+where $K_c(f)$ is the intinsic camera matrix, $R_c(f)$ and $T_c(f)$ are the relative camera rotation and translation respectively of frame $f$.  We denote this transformations $x_c^n(f) = P_n(f,X^n(t))$. The time correspoding to frame $f$ is related to the continous global time $t$ linearly: $f=\alpha_c t+\beta$, where $\alpha_c$ is the frame rate  and time offset respectively. T
 
-where $K_n(f)$ is the intrisic camera matrix, $R_n(f)$ and $T_n(f)$ are the relative camera rotation and translation, respectively. We denote this transformations $x_c^n(f) = P_n(f,X^n(t))$
+
 %-------------------------------------------------------------------------
 
-\subsection{Time synchronization from multiple videos}
-All the videos captured are taken from unsynchronized cameras. The first problem is to solve the synchronization problem by observing motion of onjects from multiple views. we propose a multi camera video synchronization method for reconstructing from multiple videos. We assume that the rotation and translation of the object to be constant over time. We follow the work of \cite{gaspar2014synchronization}, which synchronizes the time offset between two video frames assuming motion of a rigid object from non overlapping views. We extend the formulation further to synchronize multiple videos observing a moving rigid objects. The error to be minimized for synchronization is:
-\begin{equation}
-  	E_s(\delta) = min \ E_{R}(\delta,q) + E_{T}(\delta,T,q) + (q^{T} q -1)^2
-\end{equation}
-where $\delta$ is the time offset of each video with respect to the global time. where $E_R(\delta,q)$ gives the error in rotation with respect to the offset for the moving object and $E_T(\delta,T,q)$ gives the error in translation with respect to the offset. T and q are the translation and rotation in quaternion respectively. For further details on how to model these errors can be referred to \cite{gaspar2014synchronization}.
 
 
-\subsection{Multi-view Object Fitting}
+\subsection{RANSAC Based Object Fit}
+\label{sec:RANSAC_FIT}
 We currently have tracks of objects and thier respective keypoints in each individual video for all videos of the scene. For accurate reconstruction of objects from multiple views we need to find corrospondences across views. We propose a object specific bundle adjustment for finding correspondes across views. Lets assume we have $h$ object proposals in $N$ videos at any time instant $t$. The problem of correspondence is finding $g$, where $g \subset h$ object bounding boxes which belong to the same object. Since there is a spatial constraint on the bounding boxes over multiple views, Fig \ref{fig:corr} shows the bundle adjustment we use to find correspondes across views. We propose a ransac based methodology for finding correspondenses across views and minimize the following reprojection error:
 
 \begin{equation}
-  	E_r =\sum_{n=1}^{N} \sum_{p=1}^P \sum_{f=1}^{F_n} V_n^p(f) ||P_n(f,X^p(t)) - x_n^p(f)||^2
+  	E_r(t) =\sum_{n=1}^{N} \sum_{p=1}^P \sum_{f=1}^{F_n} V_n^p(f) ||P_n(f,X^p(t)) - x_n^p(f)||^2
 \end{equation}
    
 where $E_r$ is the image reprojection error, $V_n^p(f)$ is a binary indicator of the visibilty of the keypoint. We add additional constraints like symmetry and the length of different joints of the object for accurate fitting of the rigid object in 3D. A joint in 3d can be defined as the difference of the 3D points between the centers of the joint. We define a joint as $J(p1,p2) = X^{p1}(t) - X^{p2}(t) $ where p1 and p2 correspond to different parts of the rigid object which are linked. 
 
 \begin{equation}
-  	E_l = \sum_{r=1}^R ||J(r) - E(J(r))||^2  
+  	E_l(t) = \sum_{r=1}^R ||J(r) - E(J(r))||^2  
 \end{equation}
 
 where $E(J(r))$ is the mean length of joint $r$. We model the symmetry constraint in the bundle adjustment for better reconstruction of rigid objects.
 \begin{equation}
-  	E_j = \sum_{q = 1}^Q ||J(q) - J(S(q))||^2
+  	E_j(t) = \sum_{q = 1}^Q ||J(q) - J(S(q))||^2
 \end{equation}
 
-where $S(q)$gives the corresponding symmetric joint of $q$ i.e. if q is the joint connecting the left wheels of a car S(q)is the joint connecting the right wheels of the car.The other most important constraint valid for all rigidly moving objects in the as rigid as possble error:
+where $S(q)$gives the corresponding symmetric joint of $q$ i.e. if q is the joint connecting the left wheels of a car S(q)is the joint connecting the right wheels of the car. All the above constraints are enough to fit a object from multiple views we minimize the object specific error for finding the tracks of object accross views in stead of triangulation methods.  The energy can be defined as:
 \begin{equation}
-  	E_h = \sum_{p=1}^P ||Rp||^2
+  	E_o(t) = E_r(t) +  E_l(t) + E_j(t)
+  	\label{eq:corr_accross_views}
 \end{equation}
-The above error enforces that all the points have the same rotation. This is valid for all rigid objects or for points in a small clique for non rigid objects.
+The following energy is minimized for all the views in a ransac based formulation to find the correspondece across views.
+%The other most important constraint valid for all rigidly moving objects in the as rigid as possble error:
+%\begin{equation}
+%  	E_h = \sum_{p=1}^P ||Rp||^2
+%\end{equation}
+%The above error enforces that all the points have the same rotation. This is valid for all rigid objects or for points in a small clique for non rigid objects.
 
 
 \begin{algorithm}
-\caption{Multi-view Object Correspondence}\label{euclid}
-\begin{algorithmic}[1]
+\caption{Object specific Reconstruction}\label{euclid}
 %\Procedure{MyProcedure}{}
-\State $\textit{n} \gets \text{Total object Hypothesis }$
-\State $s \gets 0$
-\State $l \gets \text{Minimum Number of Views of Object}$
-\BState \emph{$while(s < l$)}: \\
-\ \ \ $h=SAMPLE(n)$\\
-\ \ \ $E_o = E_r(h) + E_j(h) +E_l(h) $\\
-\ \ \ $s = REPROJECTFIT(E_o,n) $\\
-$End$
-%\EndProcedure
-\end{algorithmic}
+%Input:
+\SetKwInOut{Input}{Input}%
+\Input{$\lbrace x_c^m(t) \rbrace,\lbrace K',R',T' \rbrace,\beta'$}
+\SetKwInOut{Output}{Output}
+\Output{$\lbrace X_p^m(t) \rbrace,\lbrace K,R,T \rbrace,\beta$}
+$\textit{n} \gets \text{Total object Hypothesis in C views }$(Sec. \ref{sec:keypoint})\;
+\While{Object Visibility $<$ Min object views}{
+    \Repeat{loop $<$ MaxIteration}{
+	    $h=Sample(n)$\;
+		solve eq. \ref{eq:corr_accross_views} for $h$ \;
+    	$s = Reprojectfit(K',R',T',x_c^m(t),n)$  \;
+    	loop++\;
+    \If{s$<$a}{
+      Object Visibility = s\;
+    }
+   
+    	%\eif{s$<$a}{sas\;}{asas\;}
+    }
+  }(Sec \ref{sec:RANSAC_FIT})
+Track keypoints for s objects (Sec \ref{sec:track})\;
+solve Eq.\ref{eq:STBA} for $\lbrace X_p^m(t) \rbrace,\lbrace K,R,T \rbrace,\beta$\;
+Reproject and retrain the network(sec \ref{ref:retrain})\;
 \end{algorithm}
 
 
 
+\subsection{Multi-Video time synchronization}
+All the videos captured are taken from unsynchronized cameras. The first problem is to solve the synchronization problem by observing motion of objects from multiple views. we propose a multi camera video synchronization method for reconstructing from multiple videos. We assume that the rotation and translation of the object to be constant over time. We follow the work of \cite{gaspar2014synchronization}, which synchronizes the time offset between two video frames assuming motion of a rigid object from non overlapping views. We extend the formulation further to synchronize multiple videos observing a moving rigid objects. The time offset $\delta$ with respect to global time can be computed using a addition constraint in the bundle adjustment. which is the as rigid as possible constraint which imrpoves the reconstruction as well as gives an accurate time offset. The error term is given as:
+  
 
+where$E_R$ is the rigidity constraint on the 3d points belonging to the object. It is given by
+\begin{equation}
+E_R(t) =  \sum_{i = 1}^{T^n -1}\sum_{p = 1}^P||(X_{p1}'-X_{p2}')-R*(X_{p1}-X_{p2})||^2 
+\end{equation}
 
-\subsection{Spatio-Temporal Bundle Adjustment}
+\subsection{Constrained Bundle Adjustment}
+
 Once we have the correspondences across cameras and views, We get the fit a motion model based rigid object over time. The formulation is given by:
 
 \begin{equation}
- E = arg \underset{X(t),\{K,R,t\},\alpha,\delta} {\mathrm{min}} \sum_{t=1}^T E_r +  E_j +  E_l +  E_m + E_s
+ E = arg \underset{X(t),\{K,R,T\},\alpha,\delta} {\mathrm{min}} \sum_{t=1}^T E_o(t) +  E_m(t) + E_R(t)
+ \label{eq:STBA}
 \end{equation}
 
 where $w$ represents the weights of each term in the bundle adjustment. $E_m$ is defined as the motion prior over the trajectory of the points.
 
 \begin{equation}
-E_m = \sum_{p =1 }^P \sum_{i = 1}^{T^n -1} ||\frac{X^p(t^{i+1}) - X^p(t^{i})}{t^{i+1} - t^{i}}||^2 (t^{i+1} - t^{i})
+E_m(t) = \sum_{p =1 }^P \sum_{i = 1}^{T^n -1} ||\frac{X^p(t^{i+1}) - X^p(t^{i})}{t^{i+1} - t^{i}}||^2 (t^{i+1} - t^{i})
 \end{equation}
+and 
+Although the reocnstructions from the constrained bundle adjustment works well. It is highly dependent on the keypoint detector. We propose to improve the reconstruction by using local features like sift around the keypoints. Since the motion of the object is continuous, we enforce the $E_r$, $E_m$, $E_h$ on these points improve the localization of the keypoints.
 \begin{figure}
   \centering
     \includegraphics[width=0.4\textwidth]{images/corr}
@@ -149,16 +173,17 @@ E_m = \sum_{p =1 }^P \sum_{i = 1}^{T^n -1} ||\frac{X^p(t^{i+1}) - X^p(t^{i})}{t^
   \label{fig:corr}
 \end{figure}
 
-\subsection{Local features based Refinement}
-Although the reocnstructions from the constrained bundle adjustment works well. It is highly dependent on the keypoint detector. We propose to improve the reconstruction by using local features like sift around the keypoints. Since the motion of the object is continuous, we enforce the $E_r$, $E_m$, $E_h$ on these points improve the localization of the keypoints.
 \subsection{Finetune Network}
- 
+ \label{ref:retrain}
+ We believe that having a good 3D reconstruction from multiple views we can improve the detectors which gave the initial object keypoints. Since we use some geometric feature to improve the reconstruction the localization of the keypoints is improved. We reproject the reconstructed keypoints and finetune the detector for a better detector.
 \section{Implementation Details}
 
 \subsection{Instance Aware Keypoint detection}
+\label{sec:keypoint}
 Given a images with multiple moving objects. The amount of objects which can move can be sorted into a small set of categories like cars and humans. We propose a instance keypoint detection on these categories for improving the reconstruction of these objects. We leverage deep learning framwork for fast and accurate detection of semantic features in images. We pass the input image through a detection pipeline and each detected bounding box is passed through a object specific keypoint detection pipeline for computation of semantic features in an image.  
 
 \subsection{Object aware keypoint tracking}
+\label{sec:track}
 Tracking of keypoints has generally been considered as a search problem over the image space for features of similar shape in adjustcent images. Semantic aware tracking correspondences to tracking of the important parts using the knowledge of the object i.e. the keypoints on the wheels are tracked by finding the correspondences of cars overtime. This gives a better tracks of the keypoints and longer correpondeces compared to the feature based tracking methods. 
 
 {\small
